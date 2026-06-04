@@ -27,7 +27,7 @@ class BlurBallPostprocessor(object):
         # print(hm_type, sigmas, mags, min_values)
 
     def _detect_blob_concomp(self, hm):
-        xys, ls, angles, scores = [], [], [], []
+        xys, ls, angles, radii, scores = [], [], [], [], []
         if np.max(hm) > self._score_threshold:
             visi = True
             th, hm_th = cv2.threshold(hm, self._score_threshold, 1, cv2.THRESH_BINARY)
@@ -69,17 +69,28 @@ class BlurBallPostprocessor(object):
 
                     # Calculate the length of the major axis
                     l = projected.max() - projected.min()
+
+                    # Minor axis (perpendicular to motion) ~ the ball's width;
+                    # half of it is the apparent ball radius in pixels. Degenerate
+                    # blobs give only one eigenvector -> no width, radius 0.
+                    if eigenvectors.shape[0] >= 2:
+                        proj_minor = np.dot(coords - mean, eigenvectors[1])
+                        radius = (proj_minor.max() - proj_minor.min()) / 2
+                    else:
+                        radius = 0.0
                 else:
                     score = ws.shape[0]
                     x = np.sum(np.array(xs)) / ws.shape[0]
                     y = np.sum(np.array(ys)) / ws.shape[0]
+                    radius = 0.0
                     # print(xs, ys)
                     # print(score, x, y)
                 xys.append(np.array([x, y]))
                 ls.append(l / 2)
                 angles.append(angle_degrees)
+                radii.append(radius)
                 scores.append(score)
-        return xys, angles, ls, scores
+        return xys, angles, ls, radii, scores
 
     def run(self, preds, affine_mats):
         results = defaultdict(lambda: defaultdict(dict))
@@ -103,13 +114,14 @@ class BlurBallPostprocessor(object):
                         xys_, scores_ = self._detect_blob_gravity(hms_[i,j])
                     """
                     if self._blob_det_method == "concomp":
-                        xys_, angles_, ls_, scores_ = self._detect_blob_concomp(
+                        xys_, angles_, ls_, radii_, scores_ = self._detect_blob_concomp(
                             hms_[i, j]
                         )
                     elif self._blob_det_method == "nms":
                         xys_, scores_ = self._detect_blob_nms(
                             hms_[i, j], self._sigmas[scale]
                         )
+                        angles_, ls_, radii_ = [], [], []
                     else:
                         raise ValueError(
                             "undefined xy_comp_method: {}".format(self._xy_comp_method)
@@ -123,6 +135,7 @@ class BlurBallPostprocessor(object):
                         "xys": xys_t_,
                         "angles": angles_,
                         "lengths": ls_,
+                        "radii": radii_,
                         "scores": scores_,
                         "hm": hms_[i, j],
                         "trans": affine_mats_[i],

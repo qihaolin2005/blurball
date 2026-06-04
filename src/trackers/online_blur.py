@@ -12,7 +12,7 @@ class OnlineTrackerBlur:
         best_score = -np.Inf
         visi = False
         x, y = -np.Inf, -np.Inf
-        angle, length = -np.Inf, -np.Inf
+        angle, length, radius = -np.Inf, -np.Inf, -np.Inf
 
         xy_pred = None
 
@@ -31,7 +31,8 @@ class OnlineTrackerBlur:
                 visi = True
                 angle = det["angle"]
                 length = det["length"]
-        return x, y, angle, length, visi, best_score
+                radius = det.get("radius", -np.Inf)
+        return x, y, angle, length, radius, visi, best_score
 
     def _select_not_too_far(self, frame_dets):
         if (self._fid == 0) or (not self._track.is_visible(self._fid - 1)):
@@ -51,7 +52,7 @@ class OnlineTrackerBlur:
 
     def update(self, frame_dets):
         frame_dets = self._select_not_too_far(frame_dets)
-        x, y, angle, length, visi, score = self._select_best(frame_dets)
+        x, y, angle, length, radius, visi, score = self._select_best(frame_dets)
         self._track.add(self._fid, x, y, visi, score)
 
         self._fid += 1
@@ -60,6 +61,7 @@ class OnlineTrackerBlur:
             "y": y,
             "angle": angle,
             "length": length,
+            "radius": radius,
             "visi": visi,
             "score": score,
         }

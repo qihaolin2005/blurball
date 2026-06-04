@@ -140,7 +140,7 @@ def inference_video(
 
     x_fin, y_fin, vis_fin = [], [], []
     if cfg["model"]["name"] == "blurball":
-        l_fin, theta_fin = ([], [])
+        l_fin, theta_fin, radius_fin = ([], [], [])
 
     cnt = 0
     for cnt, img_path in enumerate(result_dict.keys()):
@@ -152,6 +152,7 @@ def inference_video(
         if cfg["model"]["name"] == "blurball":
             angle_pred = result_dict[img_path]["angle"]
             length_pred = result_dict[img_path]["length"]
+            radius_pred = result_dict[img_path]["radius"]
 
         # Save the predictions
         x_fin.append(int(min(max(x_pred, 0), 100000)))
@@ -160,6 +161,7 @@ def inference_video(
         if cfg["model"]["name"] == "blurball":
             theta_fin.append(angle_pred)
             l_fin.append(length_pred)
+            radius_fin.append(radius_pred)
 
         # cv2.imshow("test", 250 * hm_results[img_path][0]["hm"])
         # cv2.waitKey(800)
@@ -271,6 +273,7 @@ def inference_video(
                 "Visibility": vis_fin,
                 "L": l_fin,
                 "Theta": theta_fin,
+                "Radius": radius_fin,
             }
         )
     else:

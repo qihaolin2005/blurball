@@ -117,11 +117,13 @@ class BlurBallDetector(object):
                     xys = pp_results[bid][eid][scale]["xys"]
                     angles = pp_results[bid][eid][scale]["angles"]
                     lengths = pp_results[bid][eid][scale]["lengths"]
-                    for xy, angle, length, score in zip(xys, angles, lengths, scores):
+                    radii = pp_results[bid][eid][scale]["radii"]
+                    for xy, angle, length, radius, score in zip(xys, angles, lengths, radii, scores):
                         results[bid][eid].append({
                             "xy": xy,
                             "angle": angle,
                             "length": length,
+                            "radius": radius,
                             "score": score,
                             "scale": scale,
                         })

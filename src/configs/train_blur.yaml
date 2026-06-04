@@ -1,4 +1,4 @@
-WASB_ROOT: /home/gossard/Git/blurball
+WASB_ROOT: /home/jjsuckas/table-tennis/blurball
 defaults:
         - _self_
         - runner: train
